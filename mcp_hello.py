@@ -2,8 +2,10 @@ from fastmcp import FastMCP
 import random
 import sys
 
+# Debug helper: when launched via `uv run`, this prints which interpreter is used.
 print(sys.executable, file=sys.stderr)
 
+# A small demo MCP server exposing "fun" tools (greetings, jokes, quotes, etc.).
 mcp = FastMCP("hello_server")
 
 
@@ -19,6 +21,7 @@ async def get_greetings(name: str) -> str:
 @mcp.tool()
 async def get_random_joke() -> str:
     """Return a random joke."""
+    # Static content is fine here—this is intended as a lightweight example tool.
     jokes = [
         "Why don't scientists trust atoms? Because they make up everything!",
         "Why did the scarecrow win an award? Because he was outstanding in his field!",
@@ -59,6 +62,7 @@ async def get_random_number(min_value: int = 1, max_value: int = 100) -> str:
         min_value: The minimum value (default: 1)
         max_value: The maximum value (default: 100)
     """
+    # Prefer returning a clear, tool-friendly error string for invalid ranges.
     if min_value > max_value:
         return f"Error: min_value ({min_value}) cannot be greater than max_value ({max_value})."
     number = random.randint(min_value, max_value)
@@ -84,4 +88,5 @@ async def get_random_fact() -> str:
 
 
 if __name__ == "__main__":
+    # Default transport is stdio, which is ideal when this server is spawned by an MCP client.
     mcp.run()

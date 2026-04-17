@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import anyio
@@ -7,8 +6,10 @@ from dotenv import load_dotenv
 from fastmcp import FastMCP
 
 
+# Load DB credentials (and other local config) from a `.env` file if present.
 load_dotenv()
 
+# MCP server exposing a small, safety-focused MySQL query surface.
 mcp = FastMCP("mysql-mcp")
 
 
@@ -58,12 +59,14 @@ async def _run_mysql_query(sql: str, params: Optional[Dict[str, Any]] = None) ->
     config = _get_mysql_config()
 
     def _sync_query() -> List[Dict[str, Any]]:
+        # mysql-connector-python is synchronous; run it off the event loop to avoid
+        # blocking other MCP requests.
         conn = mysql.connector.connect(**config)
         try:
             cursor = conn.cursor(dictionary=True)
             cursor.execute(sql, params or {})
             rows = cursor.fetchall()
-            # Ensure all values are JSON-serializable
+            # MCP responses are JSON-encoded; coerce common DB-native types.
             result: List[Dict[str, Any]] = []
             for row in rows:
                 cleaned: Dict[str, Any] = {}
